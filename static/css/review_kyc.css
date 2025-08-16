@@ -1,0 +1,104 @@
+:root {
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #60a5fa;
+    --secondary-color: #475569;
+    --accent-color: #f59e0b;
+    --background-color: #f8fafc;
+    --surface-color: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+}
+
+body {
+    background: var(--background-color);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+}
+
+h2 {
+    text-align: center;
+    color: #1565c0;
+    margin-top: 30px;
+}
+
+.review-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem;
+    background: var(--surface-color);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.review-container p {
+    font-size: 1.1em;
+    margin: 12px 0;
+}
+
+.review-container a {
+    color: #1565c0;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.review-container img {
+    display: block;
+    margin: 12px 0 0 0;
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.review-container form {
+    margin-top: 18px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.review-container button {
+    background: #1565c0;
+    color: #fff;
+    border: none;
+    padding: 8px 22px;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.review-container button:hover {
+    background: #0d47a1;
+}
+
+.review-container .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 24px;
+    color: #888;
+    text-decoration: none;
+    font-size: 1em;
+}
+
+.review-container .back-link:hover {
+    color: #1565c0;
+}
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: auto;
+  background: var(--dark-blue);
+  color: var(--text-white);
+}

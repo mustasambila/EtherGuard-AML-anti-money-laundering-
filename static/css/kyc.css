@@ -1,0 +1,158 @@
+:root {
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #60a5fa;
+  --secondary-color: #475569;
+  --accent-color: #f59e0b;
+  --background-color: #f8fafc;
+  --surface-color: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background: var(--background-color);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+}
+
+/* Header Styling */
+header {
+  background: linear-gradient(to right, var(--bg-light), var(--text-white));
+  color: var(--dark-blue);
+  padding: 20px 0;
+  text-align: center;
+  margin-bottom: 30px;
+  box-shadow: var(--shadow);
+}
+
+header h1 {
+  font-size: 1.8rem;
+  margin: 0;
+  padding: 0 20px;
+}
+
+/* Main Content Container */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  background: var(--surface-color);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.5s ease;
+  flex: 1;
+}
+
+h1 {
+  color: var(--dark-blue);
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  border-bottom: 2px solid var(--light-blue);
+  padding-bottom: 10px;
+}
+
+/* Form Styling */
+form {
+  background: white;
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin: 20px 0;
+}
+
+input[type="text"],
+input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 2px solid var(--light-blue);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+input[type="text"]:focus,
+input[type="file"]:focus {
+  border-color: var(--primary-blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dark-blue);
+  font-weight: 600;
+}
+
+button[type="submit"] {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--dark-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+/* Footer Styling */
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 60px; /* Space between container and footer */
+  background: var(--dark-blue);
+  color: var(--text-white);
+  width: 100%;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .container {
+    padding: 20px 15px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  footer {
+    margin-top: 40px; /* Slightly less space on mobile */
+  }
+}
