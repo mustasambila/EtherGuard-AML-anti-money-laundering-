@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | EtherGuard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-modern.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-white border-end sidebar" id="sidebar-wrapper">
+        <div class="sidebar-heading text-center py-4 primary-text fs-4 fw-bold border-bottom">
+            <img src="{{ url_for('static', filename='logo.png') }}" 
+         alt="EtherGuard" 
+         width="40" 
+         class="d-inline-block align-top me-2"> EtherGuard
+        </div>
+<div class="list-group list-group-flush my-3">
+    <a href="{{ url_for('home') }}" class="list-group-item list-group-item-action bg-transparent fw-bold">
+        <i class="bi bi-house-door me-2"></i>Home
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="{{ url_for('track_wallet') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-search me-2"></i>Track Wallet</a>
+    <a href="{{ url_for('watchlist_page') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-eye me-2"></i>Watchlist</a>
+    {% if session.is_admin %}
+    <a href="{{ url_for('admin_kyc') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-person-badge me-2"></i>Admin KYC</a>
+    <a href="{{ url_for('admin_logs') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Admin logs</a>
+    {% endif %}
+    <a href="{{ url_for('account') }}" class="list-group-item list-group-item-action bg-transparent fw-bold active"><i class="bi bi-person me-2"></i>User Information</a>
+</div>
+        <div class="sidebar-footer text-center mt-auto mb-3">
+            <div class="small text-muted">AML Tip</div>
+            <div class="small">Watch for sudden large ETH transfers from new wallets.</div>
+        </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper" class="w-100">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <div class="container-fluid">
+                <span class="navbar-brand ms-3">AML Dashboard</span>
+                <div class="ms-auto">
+                    <span class="me-3">Welcome, {{ session['user'] }}</span>
+                     <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid px-4 py-4">
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="card-title text-muted">Suspicious Transactions</div>
+                            <div class="display-6 fw-bold text-danger">{{ suspicious_count }}</div>
+                            <div class="small text-danger">+12% from yesterday</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="card-title text-muted">Total Transactions</div>
+                            <div class="display-6 fw-bold">{{ total_transactions }}</div>
+                            <div class="small text-muted">Last 24 hours</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="card-title text-muted">High Risk Wallets</div>
+                            <div class="display-6 fw-bold text-warning">{{ high_risk_wallets }}</div>
+                            <div class="small text-success">+5% from last week</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="card-title text-muted">SARs Filed</div>
+                            <div class="display-6 fw-bold text-primary">{{ sars_filed }}</div>
+                            <div class="small text-muted">This month</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Risk Trend Analysis & Wallet Risk Distribution -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="card-title fw-bold">Risk Trend Analysis</div>
+                            <div class="d-flex justify-content-end mb-2">
+                                <button class="btn btn-outline-secondary btn-sm me-2">Weekly</button>
+                                <button class="btn btn-primary btn-sm">Monthly</button>
+                                <button class="btn btn-outline-secondary btn-sm ms-2">Yearly</button>
+                            </div>
+                           <div class="chart-container" id="risk-dist-chart" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="card-title fw-bold">Wallet Risk Distribution</div>
+                            <div class="d-flex justify-content-end mb-2">
+                                <button class="btn btn-outline-secondary btn-sm">Export</button>
+                            </div>
+                            <div class="chart-container" id="risk-trend-chart" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Recent Suspicious Activity -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <div class="card-title fw-bold">Recent Suspicious Activity</div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hash</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Value (ETH)</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for txn in suspicious_transactions %}
+                                <tr>
+                                    <td>{{ txn.hash }}</td>
+                                    <td>{{ txn.from }}</td>
+                                    <td>{{ txn.to }}</td>
+                                    <td>{{ (txn.value | int) / 1e18 }}</td>
+                                    <td>{{ txn.timeStamp | datetimeformat }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <a href="#" class="btn btn-link">View All</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+<script>
+    // Toggle sidebar
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('sidebar-wrapper').classList.toggle('collapsed');
+        document.getElementById('page-content-wrapper').classList.toggle('expanded');
+    });
+
+    // Initialize charts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Risk Trend Chart
+        const trendCtx = document.createElement('canvas');
+        document.querySelector('#risk-trend-chart').appendChild(trendCtx);
+        const trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Suspicious Transactions',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#f8fafc'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#f8fafc'
+                        },
+                        grid: {
+                            color: 'rgba(248, 250, 252, 0.1)'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#f8fafc'
+                        },
+                        grid: {
+                            color: 'rgba(248, 250, 252, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Risk Distribution Chart
+        const distCtx = document.createElement('canvas');
+        document.querySelector('#risk-dist-chart').appendChild(distCtx);
+        const distChart = new Chart(distCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+                datasets: [{
+                    data: [15, 25, 60],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(251, 191, 36, 0.8)',
+                        'rgba(34, 197, 94, 0.8)'
+                    ],
+                    borderColor: [
+                        '#ef4444',
+                        '#fbbf24',
+                        '#22c55e'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Timeframe switcher
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const timeframe = this.dataset.timeframe;
+                fetch(`/api/risk-trend/${timeframe}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        trendChart.data.labels = data.labels;
+                        trendChart.data.datasets[0].data = data.data;
+                        trendChart.update();
+                    });
+                
+                // Update active button state
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('btn-primary'));
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.add('btn-outline-secondary'));
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-primary');
+            });
+        });
+
+        // Connect to Ethereum
+        if (typeof window.ethereum !== 'undefined') {
+            window.web3 = new Web3(window.ethereum);
+            try {
+                // Request account access
+                window.ethereum.enable();
+            } catch (error) {
+                console.error("User denied account access");
+            }
+        } else if (typeof web3 !== 'undefined') {
+            window.web3 = new Web3(web3.currentProvider);
+        } else {
+            console.log('Non-Ethereum browser detected. Consider installing MetaMask!');
+        }
+    });
+
+    // Wallet tracking functionality
+    function trackWallet() {
+        const address = document.getElementById('wallet-address').value;
+        if (!web3.utils.isAddress(address)) {
+            alert('Invalid Ethereum address');
+            return;
+        }
+        
+        // Show loading state
+        const resultDiv = document.getElementById('wallet-result');
+        resultDiv.innerHTML = '<div class="spinner-border text-primary" role="status"></div>';
+        
+        // Get wallet info
+        Promise.all([
+            web3.eth.getBalance(address),
+            web3.eth.getTransactionCount(address)
+        ]).then(([balance, txCount]) => {
+            const ethBalance = web3.utils.fromWei(balance, 'ether');
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5>Wallet Analysis</h5>
+                    <p>Address: ${address}</p>
+                    <p>Balance: ${parseFloat(ethBalance).toFixed(4)} ETH</p>
+                    <p>Transactions: ${txCount}</p>
+                    <p>Risk Level: ${calculateRiskLevel(txCount, ethBalance)}</p>
+                </div>
+            `;
+        }).catch(err => {
+            resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+        });
+    }
+
+    function calculateRiskLevel(txCount, balance) {
+        const riskScore = (txCount * 0.3) + (balance * 0.7);
+        if (riskScore > 50) return 'High';
+        if (riskScore > 20) return 'Medium';
+        return 'Low';
+    }
+</script>
+<footer class="footer mt-auto py-3 bg-light border-top">
+    <div class="container text-center">
+        <span class="text-muted">&copy; 2025 EtherGuard | All rights reserved.</span>
+    </div>
+</footer>
+</body>
+</html>
+<!-- Add this in the head section or before closing body tag -->
+<script src="{{ url_for('static', filename='js/chart-config.js') }}"></script>

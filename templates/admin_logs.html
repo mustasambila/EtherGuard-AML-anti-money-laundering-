@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Logs | EtherGuard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-modern.css') }}">
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-white border-end sidebar" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 primary-text fs-4 fw-bold border-bottom">
+                <img src="{{ url_for('static', filename='logo.png') }}" 
+                     alt="EtherGuard" 
+                     width="40" 
+                     class="d-inline-block align-top me-2"> EtherGuard
+            </div>
+            <div class="list-group list-group-flush my-3">
+                <a href="{{ url_for('home') }}" class="list-group-item list-group-item-action bg-transparent fw-bold">
+                    <i class="bi bi-house-door me-2"></i>Home
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                <a href="{{ url_for('track_wallet') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-search me-2"></i>Track Wallet</a>
+                <a href="{{ url_for('watchlist_page') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-eye me-2"></i>Watchlist</a>
+                <a href="{{ url_for('admin_kyc') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-person-badge me-2"></i>Admin KYC</a>
+                <a href="{{ url_for('admin_logs') }}" class="list-group-item list-group-item-action bg-transparent fw-bold active"><i class="bi bi-file-earmark-text me-2"></i>Logs</a>
+                <a href="{{ url_for('account') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-person me-2"></i>User Information</a>
+            </div>
+            <div class="sidebar-footer text-center mt-auto mb-3">
+                <div class="small text-muted">Logs Tip</div>
+                <div class="small">Monitor system activities regularly.</div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" id="menu-toggle">☰</button>
+                    <span class="navbar-brand ms-3">System Logs</span>
+                    <div class="ms-auto">
+                        <span class="me-3">Welcome, Admin</span>
+                        <li class="nav-item">
+                        <button id="logoutBtn" class="btn btn-danger">Logout</button>
+                        </li>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-4">
+                <!-- Log Stats Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">Critical Logs</div>
+                                <div class="display-6 fw-bold text-danger">{{ level_stats.critical }}</div>
+                                <div class="small text-muted">Require immediate attention</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">Errors</div>
+                                <div class="display-6 fw-bold text-warning">{{ level_stats.error }}</div>
+                                <div class="small text-muted">System errors occurred</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">Warnings</div>
+                                <div class="display-6 fw-bold text-info">{{ level_stats.warning }}</div>
+                                <div class="small text-muted">Potential issues</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">User Activity</div>
+                                <div class="display-6 fw-bold text-primary">{{ user_activity }}</div>
+                                <div class="small text-muted">Last 24 hours</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Table -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="card-title fw-bold">System Log Entries</div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary">Export</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">Refresh</button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Level</th>
+                                        <th>User</th>
+                                        <th>Activity</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in logs %}
+                                    <tr>
+                                        <td>{{ log.timestamp|datetimeformat }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if log.level == 'critical' else 'warning' if log.level == 'error' else 'info' if log.level == 'warning' else 'primary' }}">
+                                                {{ log.level|upper }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if log.user_id %}
+                                                {{ log.user.username }} (ID: {{ log.user_id }})
+                                            {% else %}
+                                                System
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ log.activity }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#logDetailsModal{{ log.id }}">
+                                                <i class="bi bi-eye"></i> View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Log Details Modal -->
+                                    <div class="modal fade" id="logDetailsModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Log Details - Entry #{{ log.id }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <strong>User Information:</strong>
+                                                                {% if log.user_id and log.user %}
+                                                                    <div class="mt-2">
+                                                                        <div><strong>Username:</strong> {{ log.user.username }}</div>
+                                                                        <div><strong>User ID:</strong> {{ log.user_id }}</div>
+                                                                        <div><strong>Email:</strong> {{ log.user.email }}</div>
+                                                                    </div>
+                                                                {% else %}
+                                                                    <div class="mt-2 text-muted">System Generated</div>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <strong>Timestamp:</strong> 
+                                                                <div class="mt-1">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <strong>Level:</strong> 
+                                                                <span class="badge bg-{{ 'danger' if log.level == 'critical' else 'warning' if log.level == 'error' else 'info' if log.level == 'warning' else 'primary' }}">
+                                                                    {{ log.level|upper }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <strong>IP Address:</strong>
+                                                                <div class="mt-1">
+                                                                    {% if log.ip_address is defined and log.ip_address %}
+                                                                        <code>{{ log.ip_address }}</code>
+                                                                    {% else %}
+                                                                        <span class="text-muted">Not recorded</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <strong>Activity:</strong> 
+                                                                <div class="mt-1">{{ log.activity }}</div>
+                                                            </div>
+                                                            {% if log.details is defined and log.details %}
+                                                            <div class="mb-3">
+                                                                <strong>Additional Details:</strong>
+                                                                <div class="mt-2">
+                                                                    <div class="bg-light p-3 rounded border">
+                                                                        <pre class="mb-0 small">{{ log.details }}</pre>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="small text-muted">
+                                Showing {{ logs|length }} of {{ pagination.total }} entries
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm">
+                                    {% if pagination.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_logs', page=pagination.prev_num, **current_filters) }}">Previous</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">Previous</a>
+                                    </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+                                        {% if page_num %}
+                                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                                <a class="page-link" href="{{ url_for('admin_logs', page=page_num, **current_filters) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if pagination.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_logs', page=pagination.next_num, **current_filters) }}">Next</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">Next</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Log Charts -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="card-title fw-bold">Log Levels Distribution</div>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="logLevelsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="card-title fw-bold">Recent Critical Logs</div>
+                                <div class="list-group list-group-flush">
+                                    {% for log in critical_logs %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between">
+                                            <strong>{{ log.activity }}</strong>
+                                            <span class="badge bg-danger">CRITICAL</span>
+                                        </div>
+                                        <div class="small text-muted">
+                                            {{ log.timestamp|datetimeformat }}
+                                        </div>
+                                        <div class="small">
+                                            User: {% if log.user_id %}User #{{ log.user_id }}{% else %}System{% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--<script>
+        // Toggle sidebar
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar-wrapper').classList.toggle('collapsed');
+            document.getElementById('page-content-wrapper').classList.toggle('expanded');
+        });
+
+        // Initialize log levels chart
+        const ctx = document.getElementById('logLevelsChart').getContext('2d');
+        const logLevelsChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'Error', 'Warning', 'Info'],
+                datasets: [{
+                    data: [
+                        {{ level_stats.critical }},
+                        {{ level_stats.error }},
+                        {{ level_stats.warning }},
+                        {{ level_stats.info }}
+                    ],
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(23, 162, 184, 0.7)',
+                        'rgba(13, 110, 253, 0.7)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });*/
+    </script>-->
+    <!-- other HTML content -->
+
+<!-- Logout script -->
+<script>
+document.getElementById("logoutBtn").addEventListener("click", function (event) {
+    event.preventDefault(); // stop any default link action
+    if (confirm("Are you sure you want to logout?")) {
+        window.location.href = "{{ url_for('logout') }}";
+    }
+});
+</script>
+</body>
+</html>

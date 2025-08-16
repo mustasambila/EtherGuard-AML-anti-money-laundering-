@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Email Preferences</h2>
+    
+    <form method="POST">
+        <div class="card">
+            <div class="card-header">
+                <h5>General Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="email_alerts_enabled" id="email_alerts_enabled" 
+                           {% if user.email_alerts_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="email_alerts_enabled">
+                        Enable Email Alerts
+                    </label>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="alert_email" class="form-label">Alert Email Address</label>
+                    <input type="email" class="form-control" name="alert_email" id="alert_email" 
+                           value="{{ user.alert_email or user.email }}" placeholder="{{ user.email }}">
+                    <div class="form-text">Leave blank to use your account email</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Alert Types</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="large_transaction_alerts" id="large_transaction_alerts" 
+                           {% if email_prefs.large_transaction_alerts %}checked{% endif %}>
+                    <label class="form-check-label" for="large_transaction_alerts">
+                        Large Transaction Alerts (>10 ETH)
+                    </label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="suspicious_address_alerts" id="suspicious_address_alerts" 
+                           {% if email_prefs.suspicious_address_alerts %}checked{% endif %}>
+                    <label class="form-check-label" for="suspicious_address_alerts">
+                        Suspicious Address Alerts
+                    </label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="high_frequency_alerts" id="high_frequency_alerts" 
+                           {% if email_prefs.high_frequency_alerts %}checked{% endif %}>
+                    <label class="form-check-label" for="high_frequency_alerts">
+                        High Frequency Activity Alerts
+                    </label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="watchlist_alerts" id="watchlist_alerts" 
+                           {% if email_prefs.watchlist_alerts %}checked{% endif %}>
+                    <label class="form-check-label" for="watchlist_alerts">
+                        Watchlist Activity Alerts
+                    </label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="daily_summary" id="daily_summary" 
+                           {% if email_prefs.daily_summary %}checked{% endif %}>
+                    <label class="form-check-label" for="daily_summary">
+                        Daily Summary Emails
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary mt-3">Save Preferences</button>
+        <a href="{{ url_for('account') }}" class="btn btn-secondary mt-3">Back to Account</a>
+    </form>
+</div>
+{% endblock %}

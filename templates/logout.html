@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Logs | EtherGuard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-modern.css') }}">
+    <style>
+        .log-level-critical { background-color: rgba(220, 53, 69, 0.1); }
+        .log-level-error { background-color: rgba(255, 193, 7, 0.1); }
+        .log-level-warning { background-color: rgba(255, 193, 7, 0.05); }
+        .log-entry:hover { background-color: #f8f9fa; }
+        .log-details { 
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .log-details.show {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-white border-end sidebar" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 primary-text fs-4 fw-bold border-bottom">
+                <img src="{{ url_for('static', filename='logo.png') }}" 
+         alt="EtherGuard" 
+         width="40" 
+         class="d-inline-block align-top me-2"> EtherGuard
+            </div>
+             <div class="list-group list-group-flush my-3">
+                    <a href="{{ url_for('home') }}" class="list-group-item list-group-item-action bg-transparent fw-bold">
+                        <i class="bi bi-house-door me-2"></i>Home
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    <a href="{{ url_for('track_wallet') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-search me-2"></i>Track Wallet</a>
+                    <a href="{{ url_for('watchlist_page') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-eye me-2"></i>Watchlist</a>
+                    <a href="{{ url_for('admin_kyc') }}" class="list-group-item list-group-item-action bg-transparent fw-bold active"><i class="bi bi-person-badge me-2"></i>Admin KYC</a>
+                    <a href="{{ url_for('admin_logs') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Logs</a>
+                    <a href="{{ url_for('account') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-person me-2"></i>User Information</a>
+            
+                </div>
+            <div class="sidebar-footer text-center mt-auto mb-3">
+                <div class="small text-muted">Log Tip</div>
+                <div class="small">Monitor logs regularly for security.</div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" id="menu-toggle">☰</button>
+                    <span class="navbar-brand ms-3">System Logs</span>
+                    <div class="ms-auto">
+                        <span class="me-3">Welcome, Admin</span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid px-4 py-4">
+                <!-- Log Statistics Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">Total Logs</div>
+                                <div class="display-6 fw-bold">{{ total_logs }}</div>
+                                <div class="small text-muted">Last 30 days</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">Critical</div>
+                                <div class="display-6 fw-bold text-danger">{{ critical_logs }}</div>
+                                <div class="small text-danger">{{ critical_change }}% from yesterday</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">Warnings</div>
+                                <div class="display-6 fw-bold text-warning">{{ warning_logs }}</div>
+                                <div class="small text-muted">Need attention</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="card-title text-muted">User Activity</div>
+                                <div class="display-6 fw-bold text-primary">{{ user_activity_logs }}</div>
+                                <div class="small text-muted">Last 24 hours</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Filter Controls -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Log Level</label>
+                                <select class="form-select" id="logLevelFilter">
+                                    <option value="all">All Levels</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="error">Error</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="info">Info</option>
+                                    <option value="debug">Debug</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date Range</label>
+                                <select class="form-select" id="dateRangeFilter">
+                                    <option value="today">Today</option>
+                                    <option value="yesterday">Yesterday</option>
+                                    <option value="week">Last 7 Days</option>
+                                    <option value="month" selected>Last 30 Days</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Source Module</label>
+                                <select class="form-select" id="moduleFilter">
+                                    <option value="all">All Modules</option>
+                                    <option value="authentication">Authentication</option>
+                                    <option value="transactions">Transactions</option>
+                                    <option value="kyc">KYC Verification</option>
+                                    <option value="api">API</option>
+                                    <option value="database">Database</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Search</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Search logs..." id="logSearch">
+                                    <button class="btn btn-outline-secondary" type="button">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3" id="customDateRange" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label">From</label>
+                                <input type="date" class="form-control" id="dateFrom">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">To</label>
+                                <input type="date" class="form-control" id="dateTo">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Table -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="card-title fw-bold">System Log Entries</div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary" id="refreshLogs">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" id="exportLogs">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle" id="logsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="150">Timestamp</th>
+                                        <th width="100">Level</th>
+                                        <th width="150">Module</th>
+                                        <th width="120">User</th>
+                                        <th>Message</th>
+                                        <th width="50">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in logs %}
+                                    <tr class="log-entry log-level-{{ log.level }}" data-log-id="{{ log.id }}">
+                                        <td>{{ log.timestamp|datetimeformat('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if log.level == 'critical' else 'warning' if log.level == 'error' else 'info' if log.level == 'warning' else 'primary' if log.level == 'info' else 'secondary' }}">
+                                                {{ log.level|upper }}
+                                            </span>
+                                        </td>
+                                        <td>{{ log.module }}</td>
+                                        <td>
+                                            {% if log.user_id %}
+                                            <a href="{{ url_for('user_info', user_id=log.user_id) }}" class="text-primary">
+                                                {{ log.username|default('System', true) }}
+                                            </a>
+                                            {% else %}
+                                            System
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-truncate" style="max-width: 300px;">{{ log.message }}</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-secondary view-log-details" data-log-id="{{ log.id }}">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="log-details-row">
+                                        <td colspan="6" class="p-0 border-0">
+                                            <div class="log-details" id="logDetails{{ log.id }}">
+                                                <div class="p-3 bg-light small">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <strong>Full Message:</strong>
+                                                            <div class="mt-2 p-2 bg-white rounded">{{ log.full_message }}</div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="row">
+                                                                <div class="col-6">
+                                                                    <strong>IP Address:</strong>
+                                                                    <div>{{ log.ip_address|default('N/A', true) }}</div>
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <strong>Request ID:</strong>
+                                                                    <div>{{ log.request_id|default('N/A', true) }}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mt-2">
+                                                                <div class="col-12">
+                                                                    <strong>Additional Data:</strong>
+                                                                    <pre class="mt-2 p-2 bg-white rounded" style="max-height: 150px; overflow: auto;">{{ log.additional_data|tojson|safe }}</pre>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="small text-muted">
+                                Showing {{ logs|length }} of {{ total_logs }} entries
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm">
+                                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin_logs', page=page-1) }}">Previous</a>
+                                    </li>
+                                    {% for p in range(1, total_pages+1) %}
+                                    <li class="page-item {% if p == page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin_logs', page=p) }}">{{ p }}</a>
+                                    </li>
+                                    {% endfor %}
+                                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin_logs', page=page+1) }}">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Statistics Charts -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="card-title fw-bold">Log Levels Distribution</div>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="logLevelsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="card-title fw-bold">Activity Over Time</div>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="activityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--<script>
+        // Toggle sidebar
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar-wrapper').classList.toggle('collapsed');
+            document.getElementById('page-content-wrapper').classList.toggle('expanded');
+        });
+
+        // Show/hide custom date range
+        document.getElementById('dateRangeFilter').addEventListener('change', function() {
+            document.getElementById('customDateRange').style.display = 
+                this.value === 'custom' ? 'block' : 'none';
+        });
+
+        // Toggle log details
+        document.querySelectorAll('.view-log-details').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const logId = this.dataset.logId;
+                const detailsDiv = document.getElementById(`logDetails${logId}`);
+                detailsDiv.classList.toggle('show');
+                
+                // Toggle icon
+                const icon = this.querySelector('i');
+                if (detailsDiv.classList.contains('show')) {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+                } else {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+            });
+        });
+
+        // Initialize log levels chart
+        const levelsCtx = document.getElementById('logLevelsChart').getContext('2d');
+        const levelsChart = new Chart(levelsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'Error', 'Warning', 'Info', 'Debug'],
+                datasets: [{
+                    data: [{{ critical_logs }}, {{ error_logs }}, {{ warning_logs }}, {{ info_logs }}, {{ debug_logs }}],
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(13, 110, 253, 0.8)',
+                        'rgba(25, 135, 84, 0.8)',
+                        'rgba(108, 117, 125, 0.8)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                }
+            }
+        });
+
+        // Initialize activity chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: {{ activity_days|tojson|safe }},
+                datasets: [{
+                    label: 'Log Entries',
+                    data: {{ activity_counts|tojson|safe }},
+                    borderColor: 'rgba(13, 110, 253, 0.8)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Filter logs table
+        document.getElementById('logSearch').addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+            document.querySelectorAll('#logsTable tbody tr.log-entry').forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        });
+
+        // Export logs
+        document.getElementById('exportLogs').addEventListener('click', function() {
+            // In a real app, this would make an API call to export logs
+            alert('Export functionality would be implemented here');
+        });
+
+        // Refresh logs
+        document.getElementById('refreshLogs').addEventListener('click', function() {
+            window.location.reload();
+        });
+    </script>-->
+</body>
+</html>

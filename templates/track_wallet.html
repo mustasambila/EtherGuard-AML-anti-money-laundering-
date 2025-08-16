@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Track Wallet | EtherGuard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-modern.css') }}">
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-white border-end sidebar" id="sidebar-wrapper">
+        <div class="sidebar-heading text-center py-4 primary-text fs-4 fw-bold border-bottom">
+            <img src="{{ url_for('static', filename='logo.png') }}" 
+         alt="EtherGuard" 
+         width="40" 
+         class="d-inline-block align-top me-2"> EtherGuard
+        </div>
+<div class="list-group list-group-flush my-3">
+    <a href="{{ url_for('home') }}" class="list-group-item list-group-item-action bg-transparent fw-bold">
+        <i class="bi bi-house-door me-2"></i>Home
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+    <a href="{{ url_for('track_wallet') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-search me-2"></i>Track Wallet</a>
+    <a href="{{ url_for('watchlist_page') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-eye me-2"></i>Watchlist</a>
+    {% if session.is_admin %}
+    <a href="{{ url_for('admin_kyc') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-person-badge me-2"></i>Admin KYC</a>
+    <a href="{{ url_for('admin_logs') }}" class="list-group-item list-group-item-action bg-transparent fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Admin logs</a>
+    {% endif %}
+    <a href="{{ url_for('account') }}" class="list-group-item list-group-item-action bg-transparent fw-bold active"><i class="bi bi-person me-2"></i>User Information</a>
+</div>
+        <div class="sidebar-footer text-center mt-auto mb-3">
+            <div class="small text-muted">AML Tip</div>
+            <div class="small">Monitor new wallets for unusual activity.</div>
+        </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper" class="w-100">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <div class="container-fluid">
+                <button class="btn btn-primary" id="menu-toggle">☰</button>
+                <span class="navbar-brand ms-3">Track Wallet</span>
+                <div class="ms-auto">
+                    <span class="me-3">Welcome, {{ session['user'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid py-4">
+            <!-- Wallet Tracking Form -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-search me-2"></i>Track Ethereum Wallet</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('track_wallet') }}">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" name="track_address" 
+                                           placeholder="Enter Ethereum wallet address (0x...)" required>
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="bi bi-search me-1"></i>Track Wallet
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if wallet_data %}
+            <!-- PDF Export Buttons -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">Export Options</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('export_wallet_pdf') }}" class="d-inline">
+                                    <input type="hidden" name="address" value="{{ wallet_data.address }}">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>Wallet Report (PDF)
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('export_flagged_transactions_pdf') }}" class="d-inline">
+                                    <input type="hidden" name="address" value="{{ wallet_data.address }}">
+                                    <button type="submit" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>Flagged Transactions (PDF)
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="bi bi-wallet2 me-2"></i>Wallet Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Address:</strong> <code>{{ wallet_data.address }}</code></p>
+                            <p><strong>ETH Balance:</strong> {{ "%.4f"|format(wallet_data.balance) }} ETH</p>
+                            <p><strong>USD Value:</strong> ${{ "%.2f"|format(wallet_data.balance * 2000) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>30-Day Balance History</h6>
+                            <button id="refreshChart" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="balanceChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Transactions</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if wallet_data.transactions %}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Hash</th>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Value (ETH)</th>
+                                            <th>Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tx in wallet_data.transactions %}
+                                        <tr>
+                                            <td><code>{{ tx.hash[:20] }}...</code></td>
+                                            <td><code>{{ tx.from[:15] }}...</code></td>
+                                            <td><code>{{ tx.to[:15] }}...</code></td>
+                                            <td>{{ "%.4f"|format(tx.value|int / 1000000000000000000) }}</td>
+                                            <td>{{ tx.timeStamp }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No transactions found for this wallet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    <div class="container">
+        <p>&copy; 2024 EtherGuard. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Menu toggle functionality
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+        document.getElementById('wrapper').classList.toggle('toggled');
+    });
+</script>
+
+{% if wallet_data %}
+<script>
+    let balanceChart;
+    const walletAddress = '{{ wallet_data.address|safe }}';
+
+    function initializeBalanceChart() {
+        const ctx = document.getElementById('balanceChart');
+        if (!ctx) {
+            console.error('Balance chart canvas not found');
+            return;
+        }
+        
+        balanceChart = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Balance (ETH)',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Balance (ETH)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+        loadBalanceHistory();
+    }
+
+    function loadBalanceHistory() {
+        fetch(`/api/wallet-balance-history/${walletAddress}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error loading balance history:', data.error);
+                    return;
+                }
+                
+                const labels = data.history.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+                const balances = data.history.map(item => item.balance);
+                
+                balanceChart.data.labels = labels;
+                balanceChart.data.datasets[0].data = balances;
+                balanceChart.update();
+            })
+            .catch(error => {
+                console.error('Error fetching balance history:', error);
+            });
+    }
+
+    // Refresh chart data
+    const refreshButton = document.getElementById('refreshChart');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+            this.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Refreshing...';
+            this.disabled = true;
+            
+            loadBalanceHistory();
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Refresh';
+                this.disabled = false;
+            }, 2000);
+        });
+    }
+
+    // Initialize chart when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Chart !== 'undefined') {
+            initializeBalanceChart();
+        } else {
+            console.error('Chart.js library not loaded');
+        }
+    });
+</script>
+{% endif %}
+</body>
+</html>
+</html>

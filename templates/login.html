@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login | EtherGuard</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login1.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="EtherGuard" width="60" class="mb-4">
+                <h1>Welcome Back</h1>
+                <p>Sign in to your EtherGuard account</p>
+            </div>
+            
+            <div class="login-form">
+                <form method="post">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password" required>
+                    </div>
+                    
+                    <button type="submit">Sign In</button>
+                </form>
+                
+                <div class="signup-link mt-4 text-center">
+                    Don't have an account? <a href="/signup">Sign up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer text-center py-3">
+        &copy; 2025 EtherGuard | All rights reserved.
+    </footer>
+</body>
+</html>

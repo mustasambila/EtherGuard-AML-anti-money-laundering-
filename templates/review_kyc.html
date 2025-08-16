@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Review KYC</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/review_kyc.css') }}">
+    </head>
+    <body>
+        <h2>Review KYC Application</h2>
+        <div class="review-container">
+            <p><strong>ID:</strong> {{ entry.id }}</p>
+            <p><strong>User ID:</strong> {{ entry.user_id }}</p>
+            <p><strong>Name:</strong> {{ entry.full_name }}</p>
+            <p><strong>Status:</strong> {{ entry.status }}</p>
+                        <p><strong>Document:</strong>
+                {% if entry.id_document_path %}
+                    <a href="{{ url_for('static', filename='kyc_docs/' ~ entry.id_document_path.split('/')[-1]) }}" target="_blank">View ID Document</a>
+                    {% if entry.id_document_path.lower().endswith(('.jpg', '.jpeg', '.png')) %}
+                        <br>
+                        <img src="{{ url_for('static', filename='kyc_docs/' ~ entry.id_document_path.split('/')[-1]) }}" alt="KYC Document" style="max-width:300px; margin-top:10px;">
+                    {% endif %}
+                {% else %}
+                     No ID document
+                {% endif %}
+                
+                {% if entry.poa_document_path %}
+                    <br><a href="{{ url_for('static', filename='kyc_docs/' ~ entry.poa_document_path.split('/')[-1]) }}" target="_blank">View Proof of Address</a>
+                    {% if entry.poa_document_path.lower().endswith(('.jpg', '.jpeg', '.png')) %}
+                        <br>
+                        <img src="{{ url_for('static', filename='kyc_docs/' ~ entry.poa_document_path.split('/')[-1]) }}" alt="POA Document" style="max-width:300px; margin-top:10px;">
+                    {% endif %}
+                {% endif %}
+            </p>
+            <form method="post">
+                <button name="action" value="verify">Verify</button>
+                <button name="action" value="reject">Reject</button>
+            </form>
+            <a href="{{ url_for('admin_kyc') }}">Back to KYC List</a>
+        </div>
+    </body>
+    <footer class="footer">
+        <p>&copy; 2025 Ethereum Tracker | All rights reserved.</p>
+</html>
